@@ -1,0 +1,20 @@
+package com.oops.assessment
+
+open class Animal {
+    fun eat() {
+        println("Animal is eating")
+    }
+}
+
+class Dog : Animal() {
+    fun bark() {
+        println("Dog is barking")
+    }
+}
+
+fun main() {
+    val dog = Dog()
+
+    dog.eat()
+    dog.bark()
+}
