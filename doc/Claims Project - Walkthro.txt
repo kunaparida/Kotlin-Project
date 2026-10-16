@@ -1,0 +1,392 @@
+Claims Management System - Walkthrough Script (20 Minutes)
+
+1. Introduction (1 Minute)
+What to Say
+
+"I built a Claims Management System using Java 21 and Spring Boot 3 following a modular monolith architecture. The system supports three roles: Claimant, Officer, and Manager. Claimants submit claims, officers process them through a controlled workflow, and managers monitor workload, liability, and team performance."
+
+2. Business Problem (1 Minute)
+What to Say
+
+"Insurance companies need a system to manage claim lifecycles from submission to settlement. The application enforces business rules, tracks audit history, and provides dashboard insights while ensuring secure role-based access."
+
+3. Architecture Overview (3 Minutes)
+
+Open:
+
+Plain Text
+docs/ARCHITECTURE.md
+
+Show architecture diagram.
+
+Explain Layers
+Plain Text
+Controller Layer
+↓
+Service Layer
+↓
+Repository Layer
+↓
+Database
+What to Say
+
+"I chose a modular monolith because the entire claim lifecycle belongs to a single bounded context and requires strong transactional consistency. Splitting it into microservices would introduce distributed transactions and sagas unnecessarily."
+
+Components
+Plain Text
+Controller
+↓
+Service
+↓
+Repository
+↓
+H2/PostgreSQL
+Mention
+Spring MVC
+Spring Data JPA
+Spring Security
+JWT Authentication
+Bean Validation
+OpenAPI / Swagger
+Transactional Outbox Pattern
+4. Domain Model (2 Minutes)
+Entities
+User
+Plain Text
+id
+email
+password
+role
+Claim
+Plain Text
+claimNumber
+policyNumber
+claimType
+market
+status
+assignedOfficer
+ClaimStatusHistory
+Plain Text
+Full audit trail
+OutboxEvent
+Plain Text
+Claim events
+
+Explain relationships.
+
+5. Security Design (2 Minutes)
+Explain Authentication Flow
+Plain Text
+Register/Login
+↓
+JWT Generated
+↓
+Bearer Token
+↓
+Protected APIs
+Roles
+Claimant
+Plain Text
+Submit claim
+View own claims
+Provide information
+Officer
+Plain Text
+Review claims
+Approve/Reject
+Settle claims
+Manager
+Plain Text
+Assign officers
+View dashboards
+Mention
+
+"Security is implemented using Spring Security, JWT, BCrypt password encryption, and method-level authorization."
+
+6. Claim Lifecycle (2 Minutes)
+
+Draw this:
+
+Plain Text
+SUBMITTED
+↓
+UNDER_REVIEW
+↓
+APPROVED
+↓
+SETTLED
+ 
+OR
+ 
+UNDER_REVIEW
+↓
+REJECTED
+ 
+OR
+ 
+UNDER_REVIEW
+↓
+MORE_INFO_REQUIRED
+↓
+UNDER_REVIEW
+What to Say
+
+"The workflow is enforced through a state machine in the service layer. Invalid transitions return HTTP 409 Conflict."
+
+7. Live API Demo (7 Minutes)
+
+Open Swagger:
+
+Plain Text
+http://localhost:8080/swagger-ui.html
+
+Follow this sequence from SWAGGER-TEST-GUIDE.
+
+Demo Step 1
+
+Register Claimant
+
+HTTP
+POST /api/auth/register
+
+Explain:
+
+Plain Text
+Public users can only register as CLAIMANT
+Demo Step 2
+
+Login Officer
+
+HTTP
+POST /api/auth/login
+Demo Step 3
+
+Login Manager
+
+HTTP
+POST /api/auth/login
+Demo Step 4
+
+Submit Claim
+
+HTTP
+POST /api/claims
+
+Explain validations:
+
+Future date not allowed
+Description minimum 20 chars
+Amount > 0
+Market must be 2 letters
+Demo Step 5
+
+Officer Queue
+
+HTTP
+GET /api/claims/queue
+
+Explain:
+
+Plain Text
+Shows unassigned SUBMITTED claims
+Oldest First
+
+Demo Step 6
+
+Pickup Claim
+
+HTTP
+PUT /api/claims/{id}/pickup
+Demo Step 7
+
+Review
+
+HTTP
+PUT /api/claims/{id}/review
+Demo Step 8
+
+Request Information
+
+HTTP
+PUT /api/claims/{id}/request-info
+Demo Step 9
+
+Claimant Provides Information
+
+HTTP
+PUT /api/claims/{id}/provide-info
+
+Explain business rule:
+
+Plain Text
+Only claimant can respond
+
+Demo Step 10
+
+Approve
+
+HTTP
+PUT /api/claims/{id}/approve
+Demo Step 11
+
+Settle
+
+HTTP
+PUT /api/claims/{id}/settle
+Demo Step 12
+
+History
+
+HTTP
+GET /api/claims/{id}/history
+
+Show complete audit trail.
+
+Demo Step 13
+
+Dashboard APIs
+
+HTTP
+GET /api/dashboard/workload
+ 
+GET /api/dashboard/liability
+ 
+GET /api/dashboard/performance
+
+Explain:
+
+Manager visibility
+Real-time aggregates
+Performance metrics per officer
+8. Outbox & Kafka (2 Minutes)
+
+This is where interviewers will focus.
+
+Draw
+Plain Text
+Status Change
+↓
+Claim Table
+ 
++
+History Table
+ 
++
+Outbox Table
+↓
+Commit
+↓
+Relay Scheduler
+↓
+Kafka / Log
+What to Say
+
+"Every status change creates an audit record and an outbox event in the same database transaction. This avoids the dual-write problem."
+
+Why Outbox?
+
+Without outbox:
+
+Plain Text
+DB Updated ✅
+Kafka Failed ❌
+
+Data inconsistency.
+
+With outbox:
+
+Plain Text
+Everything committed together ✅
+Kafka Question
+
+If asked:
+
+"Did you actually use Kafka?"
+
+Answer:
+
+"Kafka support is implemented and unit-tested, but default execution uses LoggingEventPublisher. Switching app.events.publisher=kafka and providing bootstrap servers enables Kafka publishing without changing business logic."
+
+9. Testing Strategy (1 Minute)
+Mention
+Plain Text
+82 Automated Tests
+
+Coverage Areas:
+
+Service layer
+Security
+Validation
+Audit
+Outbox
+Integration Tests
+End-to-end workflow tests
+
+Panel Q&A (10-15 Minutes)
+
+Be ready for:
+
+Why Monolith?
+
+Single bounded context, transactional consistency, faster delivery. Future split: Notifications and Reporting.
+
+Why JWT?
+
+Stateless authentication suitable for REST APIs.
+
+Why Outbox?
+
+Prevents lost events and dual-write issues.
+
+Why Not Direct Kafka?
+
+Database and Kafka can become inconsistent. Outbox solves that.
+
+Why H2?
+
+Development convenience. PostgreSQL configuration already prepared.
+
+Why Claim History?
+
+Audit trail and compliance requirements.
+
+What Would You Do With More Time? (10 Minutes)
+
+Mention these directly from architecture document:
+
+1
+Plain Text
+PostgreSQL + Flyway
+2
+Plain Text
+Optimistic Locking (@Version)
+3
+Plain Text
+Real Kafka Integration Testing
+4
+Plain Text
+Notification Microservice
+5
+Plain Text
+Claim Status Email Notifications
+6
+Plain Text
+Refresh Tokens
+7
+Plain Text
+Rate Limiting
+8
+Plain Text
+Time-to-resolution analytics
+
+Questions You Can Ask Panel (5 Minutes)
+How are claims currently distributed among officers?
+Are dashboards expected to be operational or analytical?
+Would future integrations be event-driven using Kafka?
+What are the expected peak claim volumes?
+Is audit compliance a major requirement in production?
+Golden Interview Closing
+
+"The project demonstrates secure claim processing, lifecycle management, auditability, role-based access, dashboard reporting, and event-driven extensibility using the transactional outbox pattern. Although currently implemented as a modular monolith, it is designed with clear seams for future decomposition into notification and reporting services."
+
+This walkthrough comfortably fits 18-20 minutes, leaving enough time for technical deep-dive questions.
