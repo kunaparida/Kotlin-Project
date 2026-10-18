@@ -3,12 +3,12 @@ package com.collection.assessment
 
 //    1. Create an immutable list using listOf()
 
-    fun main() {
-        val numbers = listOf(10, 20, 30, 40, 50)
-
-        println(numbers)
-        println(numbers[0])
-    }
+//    fun main() {
+//        val numbers = listOf(10, 20, 30, 40, 50)
+//
+//        println(numbers)
+//        println(numbers[0])
+//    }
 
 //========================================================================================
 
@@ -54,13 +54,13 @@ package com.collection.assessment
 
 //5. Remove duplicates from an ArrayList
 
-// fun main() {
-//    val numbers = arrayListOf(10, 20, 10, 30, 20, 40)
-//
-//    val uniqueNumbers = numbers.distinct()
-//
-//    println(uniqueNumbers)
-// }
+ fun main() {
+    val numbers = arrayListOf(10, 20, 10, 30, 20, 40)
+
+    val uniqueNumbers = numbers.distinct()
+
+    println(uniqueNumbers)
+ }
 
 //Using loop
 
